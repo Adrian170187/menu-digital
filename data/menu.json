@@ -1,0 +1,99 @@
+{
+  "categories": [
+    {
+      "id": "pizzas",
+      "name": "Pizzas",
+      "items": [
+        {
+          "id": 1,
+          "name": "Muzzarella",
+          "description": "Salsa de tomate, muzzarella, orégano, aceitunas.",
+          "price": 8000,
+          "stock": 50
+        },
+        {
+          "id": 2,
+          "name": "Napolitana con Ajo",
+          "description": "Salsa de tomate, muzzarella, rodajas de tomate, ajo, perejil.",
+          "price": 9500,
+          "stock": 30
+        },
+        {
+          "id": 3,
+          "name": "Rúcula y Crudo",
+          "description": "Muzzarella, rúcula fresca, jamón crudo, parmesano.",
+          "price": 11000,
+          "stock": 20
+        },
+        {
+          "id": 4,
+          "name": "Palmitos y Salsa Golf",
+          "description": "Muzzarella, jamón cocido, palmitos, salsa golf, morrones.",
+          "price": 10500,
+          "stock": 15
+        }
+      ]
+    },
+    {
+      "id": "healthy",
+      "name": "Recetas Sanas",
+      "items": [
+        {
+          "id": 101,
+          "name": "Ensalada César",
+          "description": "Lechuga, pollo grillado, croutones, parmesano, aderezo César.",
+          "price": 7500,
+          "stock": 25
+        },
+        {
+          "id": 102,
+          "name": "Wok de Vegetales",
+          "description": "Vegetales de estación salteados con soja y semillas de sésamo.",
+          "price": 7000,
+          "stock": 20
+        },
+        {
+          "id": 103,
+          "name": "Wrap de Atún",
+          "description": "Tortilla integral, atún, tomate, lechuga, queso crema light.",
+          "price": 8200,
+          "stock": 15
+        }
+      ]
+    },
+    {
+      "id": "beverages",
+      "name": "Bebidas",
+      "items": [
+        {
+          "id": 201,
+          "name": "Agua Mineral",
+          "description": "Con o sin gas 500ml.",
+          "price": 1500,
+          "stock": 100
+        },
+        {
+          "id": 202,
+          "name": "Gaseosa Cola",
+          "description": "Lata 354ml.",
+          "price": 1800,
+          "stock": 50
+        },
+        {
+          "id": 203,
+          "name": "Cerveza Rubia",
+          "description": "Porrón 330ml.",
+          "price": 2500,
+          "stock": 40
+        },
+        {
+          "id": 204,
+          "name": "Vino Malbec",
+          "description": "Copa de la casa.",
+          "price": 3500,
+          "stock": 20
+        }
+      ]
+    }
+  ]
+}

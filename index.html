@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso - Menú Digital</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            width: 250px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .auth-card:hover {
+            transform: translateY(-5px);
+            background-color: #333;
+        }
+
+        .auth-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1 style="text-align: center; margin-top: 40px;">Bienvenido al Sistema</h1>
+
+        <div class="auth-container">
+            <div class="auth-card" onclick="openLogin('camarero', 'waiter.html')">
+                <div class="auth-icon">🤵</div>
+                <div class="auth-title">Camarero</div>
+            </div>
+
+            <div class="auth-card" onclick="openLogin('cocina', 'kitchen.html')">
+                <div class="auth-icon">👨‍🍳</div>
+                <div class="auth-title">Cocina</div>
+            </div>
+
+            <div class="auth-card" onclick="openLogin('caja', 'cashier.html')">
+                <div class="auth-icon">💰</div>
+                <div class="auth-title">Caja</div>
+            </div>
+
+            <div class="auth-card" onclick="window.open('client.html', '_blank')"
+                style="border-color: var(--success-color);">
+                <div class="auth-icon">🥗</div>
+                <div class="auth-title">Soy Cliente</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h2 id="login-title">Iniciar Sesión</h2>
+                <button class="close-modal" onclick="closeLogin()">&times;</button>
+            </div>
+            <div>
+                <p style="margin-bottom: 10px;">Usuario: <strong id="login-user"></strong></p>
+                <input type="password" id="password-input" placeholder="Contraseña"
+                    style="width: 100%; padding: 10px; margin-bottom: 20px; background: #333; border: 1px solid #555; color: white; border-radius: 5px;">
+                <button class="btn-primary" onclick="attemptLogin()" style="width: 100%;">Ingresar</button>
+                <p id="error-msg" style="color: var(--accent-color); margin-top: 10px; display: none;">Contraseña
+                    Incorrecta</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        let currentRole = '';
+        let currentTarget = '';
+
+        function openLogin(role, targetFile) {
+            currentRole = role;
+            currentTarget = targetFile;
+
+            document.getElementById('login-title').innerText = `Acceso: ${role.toUpperCase()}`;
+            document.getElementById('login-user').innerText = role;
+            document.getElementById('password-input').value = '';
+            document.getElementById('error-msg').style.display = 'none';
+            document.getElementById('login-modal').classList.add('active');
+            document.getElementById('password-input').focus();
+        }
+
+        function closeLogin() {
+            document.getElementById('login-modal').classList.remove('active');
+        }
+
+        function attemptLogin() {
+            const pass = document.getElementById('password-input').value;
+            if (App.auth.login(currentRole, pass, currentRole)) {
+                window.open(currentTarget, '_blank');
+                closeLogin();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        // Enter key support
+        document.getElementById('password-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                attemptLogin();
+            }
+        });
+    </script>
+</body>
+
+</html>

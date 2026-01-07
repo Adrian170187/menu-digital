@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta Digital - Bienvenidos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <h1>🍽️ Carta Digital</h1>
+            <p style="text-align: center; color: var(--primary-color);">Bienvenidos a nuestro restaurante</p>
+
+            <div style="margin-top: 10px; text-align: center;">
+                <label for="table-select">Su Mesa:</label>
+                <select id="table-select">
+                    <option value="1">Mesa 1</option>
+                    <option value="2">Mesa 2</option>
+                    <option value="3">Mesa 3</option>
+                    <option value="4">Mesa 4</option>
+                    <option value="5">Mesa 5</option>
+                </select>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html" style="font-size: 0.8rem; opacity: 0.7;">&larr; Volver al Inicio</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" id="menu-container">
+        <!-- Menu items will be injected here -->
+        <p style="text-align:center;">Cargando menú...</p>
+    </main>
+
+    <!-- Floating Cart Button -->
+    <div class="cart-floating" id="cart-btn">
+        🛒 <span id="cart-count">0</span> | <span id="cart-total">$0</span>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tu Pedido</h2>
+                <button class="close-modal" id="close-cart">&times;</button>
+            </div>
+            <div id="cart-items">
+                <!-- Cart Items List -->
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <h3>Total: <span id="modal-total">$0</span></h3>
+                <button class="btn-primary" id="confirm-order-btn">Enviar Pedido a Cocina</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/menu-data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initial load
+            setTimeout(() => {
+                renderMenu();
+                updateCartUI();
+            }, 500);
+
+            window.addEventListener('menu-loaded', () => {
+                renderMenu();
+                updateCartUI();
+            });
+
+            // UI Logic
+            const menuContainer = document.getElementById('menu-container');
+            const cartBtn = document.getElementById('cart-btn');
+            const cartModal = document.getElementById('cart-modal');
+            const closeCart = document.getElementById('close-cart');
+            const confirmOrderBtn = document.getElementById('confirm-order-btn');
+
+            function renderMenu() {
+                if (!App.data.menu) return;
+                menuContainer.innerHTML = '';
+
+                App.data.menu.categories.forEach(category => {
+                    const section = document.createElement('section');
+                    section.innerHTML = `<h2>${category.name}</h2>`;
+
+                    const grid = document.createElement('div');
+                    grid.className = 'grid';
+
+                    category.items.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+              <div>
+                <h3>${item.name}</h3>
+                <p>${item.description}</p>
+                <div class="price">${App.formatCurrency(item.price)}</div>
+              </div>
+              <button class="btn-primary" onclick="addToCart(${item.id}, '${category.id}')">Agregar</button>
+            `;
+                        grid.appendChild(card);
+                    });
+
+                    section.appendChild(grid);
+                    menuContainer.appendChild(section);
+                });
+            }
+
+            window.addToCart = (itemId, categoryId) => {
+                const category = App.data.menu.categories.find(c => c.id === categoryId);
+                const item = category.items.find(i => i.id === itemId);
+                App.addToCart(item);
+            };
+
+            window.addEventListener('cart-updated', updateCartUI);
+
+            function updateCartUI() {
+                const count = App.data.cart.length;
+                const total = App.data.cart.reduce((sum, i) => sum + i.price, 0);
+
+                document.getElementById('cart-count').innerText = count;
+                document.getElementById('cart-total').innerText = App.formatCurrency(total);
+                document.getElementById('modal-total').innerText = App.formatCurrency(total);
+
+                const cartList = document.getElementById('cart-items');
+                if (App.data.cart.length === 0) {
+                    cartList.innerHTML = '<p>El carrito está vacío.</p>';
+                } else {
+                    cartList.innerHTML = App.data.cart.map((item, index) => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
+                <span>${item.name}</span>
+                <span>${App.formatCurrency(item.price)}</span>
+            </div>
+            `).join('');
+                }
+            }
+
+            cartBtn.addEventListener('click', () => cartModal.classList.add('active'));
+            closeCart.addEventListener('click', () => cartModal.classList.remove('active'));
+
+            confirmOrderBtn.addEventListener('click', () => {
+                const tableId = document.getElementById('table-select').value;
+                App.placeOrder(tableId);
+                cartModal.classList.remove('active');
+                updateCartUI();
+            });
+        });
+    </script>
+</body>
+
+</html>

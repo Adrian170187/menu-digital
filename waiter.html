@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Digital - Camarero</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .table-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid #333;
+        }
+
+        .table-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-btn.free {
+            border-color: #44ff44;
+            background: rgba(68, 255, 68, 0.05);
+        }
+
+        .table-btn.occupied {
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.05);
+        }
+
+        .pax-input-container {
+            background: #111;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pax-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pax-field input {
+            width: 70px;
+            padding: 10px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .btn-back {
+            background: #333;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body data-role="camarero">
+
+    <header>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="btn-back-to-tables" class="btn-back" style="display: none;">⬅️ Mesas</button>
+                <h1 id="main-title">🍽️ Mesas</h1>
+            </div>
+            <div class="nav-links">
+                <button onclick="App.auth.logout()"
+                    style="background:none; color: var(--accent-color); font-size: 0.9rem; padding: 0; cursor: pointer;">Cerrar
+                    Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- View 1: Tables Grid -->
+        <div id="view-tables">
+            <h2 style="text-align:center; margin: 20px 0; opacity: 0.7;">Seleccione una mesa</h2>
+            <div id="grid-tables" class="grid"
+                style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;">
+                <!-- Tables injected here -->
+            </div>
+        </div>
+
+        <!-- View 2: Menu Order -->
+        <div id="view-menu" style="display: none;">
+            <div class="pax-input-container">
+                <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);">Mesa <span
+                        id="display-table-id">?</span></div>
+                <div class="pax-field">
+                    <label>Adultos:</label>
+                    <input type="number" id="input-adults" min="0" value="0">
+                </div>
+                <div class="pax-field">
+                    <label>Niños:</label>
+                    <input type="number" id="input-children" min="0" value="0">
+                </div>
+            </div>
+
+            <div id="menu-items-container">
+                <!-- Menu injected here -->
+                <div id="menu-loading-msg" style="text-align:center; padding: 20px;">
+                    <p>Cargando menú...</p>
+                    <button class="btn-secondary" onclick="App.loadMenu()"
+                        style="margin-top:10px; font-size: 0.8rem;">🔄 Reintentar Carga</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Bar -->
+    <div class="cart-floating" id="btn-open-cart" style="display: none;">
+        🛒 <span id="display-cart-count">0</span> | <span id="display-cart-total">$0</span>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="modal-cart">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Pedido Mesa <span id="modal-table-id">?</span></h2>
+                <button class="close-modal" id="btn-close-cart">&times;</button>
+            </div>
+            <div id="list-cart-items" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                <!-- Items list -->
+            </div>
+            <div style="text-align: right; border-top: 1px solid #333; padding-top: 15px;">
+                <h3 style="margin-bottom: 15px;">Total: <span id="display-modal-total">$0</span></h3>
+                <div id="error-msg-pax"
+                    style="color: #ff4444; margin-bottom: 10px; display: none; text-align: center; font-weight: bold;">
+                    ⚠️ Falta ingresar adultos/niños
+                </div>
+                <button class="btn-primary" id="btn-confirm-order"
+                    style="width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 8px;">Enviar a Cocina</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/menu-data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentTableId = null;
+
+            // Initial load
+            setTimeout(() => {
+                refreshTables();
+                if (App.data.menu) {
+                    renderMenu();
+                } else {
+                    console.log("Menu not yet available, waiting for event...");
+                }
+            }, 600);
+
+            // UI Elements
+            const viewTables = document.getElementById('view-tables');
+            const viewMenu = document.getElementById('view-menu');
+            const gridTables = document.getElementById('grid-tables');
+            const btnBack = document.getElementById('btn-back-to-tables');
+            const mainTitle = document.getElementById('main-title');
+            const displayTableId = document.getElementById('display-table-id');
+            const modalTableId = document.getElementById('modal-table-id');
+            const menuContainer = document.getElementById('menu-items-container');
+            const btnOpenCart = document.getElementById('btn-open-cart');
+            const modalCart = document.getElementById('modal-cart');
+            const btnCloseCart = document.getElementById('btn-close-cart');
+            const btnConfirm = document.getElementById('btn-confirm-order');
+            const inputAdults = document.getElementById('input-adults');
+            const inputChildren = document.getElementById('input-children');
+            const errorPax = document.getElementById('error-msg-pax');
+
+            window.addEventListener('menu-loaded', renderMenu);
+
+            function refreshTables() {
+                gridTables.innerHTML = '';
+                for (let i = 1; i <= App.data.totalTables; i++) {
+                    const table = App.data.tables[i] || { status: 'free', adults: 0, children: 0 };
+                    const isOccupied = table.status === 'occupied';
+
+                    const div = document.createElement('div');
+                    div.className = `table-btn ${isOccupied ? 'occupied' : 'free'}`;
+                    div.innerHTML = `
+                        <span style="font-size: 2.5rem; margin-bottom: 10px;">${isOccupied ? '🍽️' : '🪑'}</span>
+                        <h3 style="margin:0;">Mesa ${i}</h3>
+                        <span style="font-size: 0.8rem; margin-top: 5px; font-weight: bold;">${isOccupied ? 'OCUPADA' : 'LIBRE'}</span>
+                        ${isOccupied ? `<span style="font-size: 0.75rem; opacity: 0.7; margin-top: 3px;">👥 ${table.adults + table.children} pax</span>` : ''}
+                    `;
+                    div.onclick = () => selectTable(i);
+                    gridTables.appendChild(div);
+                }
+            }
+
+            function selectTable(id) {
+                currentTableId = id;
+                const table = App.data.tables[id];
+
+                displayTableId.innerText = id;
+                modalTableId.innerText = id;
+                mainTitle.innerText = `Mesa ${id}`;
+
+                inputAdults.value = table.adults || 0;
+                inputChildren.value = table.children || 0;
+
+                viewTables.style.display = 'none';
+                viewMenu.style.display = 'block';
+                btnBack.style.display = 'flex';
+                btnOpenCart.style.display = 'flex';
+
+                renderMenu();
+                updateCartUI();
+            }
+
+            btnBack.onclick = () => {
+                viewTables.style.display = 'block';
+                viewMenu.style.display = 'none';
+                btnBack.style.display = 'none';
+                btnOpenCart.style.display = 'none';
+                mainTitle.innerText = '🍽️ Mesas';
+                refreshTables();
+            };
+
+            function renderMenu() {
+                if (!App.data.menu) return;
+                menuContainer.innerHTML = '';
+                App.data.menu.categories.forEach(cat => {
+                    const section = document.createElement('section');
+                    section.innerHTML = `<h2>${cat.name}</h2>`;
+                    const grid = document.createElement('div');
+                    grid.className = 'grid';
+                    cat.items.forEach(item => {
+                        const isNoStock = item.stock <= 0;
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.style.opacity = isNoStock ? '0.5' : '1';
+                        card.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <h3 style="margin:0;">${item.name}</h3>
+                                <span style="font-size: 0.7rem; background:#222; padding:3px 6px; border-radius:4px; color:${item.stock < 10 ? '#f44' : '#888'}">Stock: ${item.stock}</span>
+                            </div>
+                            <p style="font-size:0.85rem; margin:10px 0; min-height:40px; opacity:0.8;">${item.description}</p>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div class="price">${App.formatCurrency(item.price)}</div>
+                                <button class="btn-primary" ${isNoStock ? 'disabled' : ''} onclick="addItem(${item.id}, '${cat.id}')" style="padding: 6px 12px; font-size: 0.85rem;">
+                                    ${isNoStock ? 'Sin Stock' : 'Agregar'}
+                                </button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                    section.appendChild(grid);
+                    menuContainer.appendChild(section);
+                });
+            }
+
+            window.addItem = (id, catId) => {
+                const cat = App.data.menu.categories.find(c => c.id === catId);
+                const item = cat.items.find(i => i.id === id);
+                if (App.addToCart(item)) {
+                    renderMenu();
+                }
+            };
+
+            function updateCartUI() {
+                const count = App.data.cart.length;
+                const total = App.data.cart.reduce((s, i) => s + i.price, 0);
+
+                document.getElementById('display-cart-count').innerText = count;
+                document.getElementById('display-cart-total').innerText = App.formatCurrency(total);
+                document.getElementById('display-modal-total').innerText = App.formatCurrency(total);
+
+                const list = document.getElementById('list-cart-items');
+                if (count === 0) {
+                    list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">Vacío</p>';
+                } else {
+                    list.innerHTML = App.data.cart.map((item, idx) => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:10px;">
+                            <div>
+                                <div style="font-weight:bold; font-size: 0.95rem;">${item.name}</div>
+                                <div style="color:var(--accent-color); font-size: 0.85rem;">${App.formatCurrency(item.price)}</div>
+                            </div>
+                            <button onclick="App.removeFromCart(${idx})" style="background:#311; color:#f88; border:1px solid #522; padding:5px 10px; border-radius:5px; cursor:pointer;">&times;</button>
+                        </div>
+                    `).join('');
+                }
+                checkPax();
+            }
+
+            function checkPax() {
+                const total = (parseInt(inputAdults.value) || 0) + (parseInt(inputChildren.value) || 0);
+                if (total <= 0) {
+                    errorPax.style.display = 'block';
+                    btnConfirm.style.opacity = '0.5';
+                    btnConfirm.disabled = true;
+                    return false;
+                } else {
+                    errorPax.style.display = 'none';
+                    btnConfirm.style.opacity = '1';
+                    btnConfirm.disabled = false;
+                    return true;
+                }
+            }
+
+            inputAdults.oninput = checkPax;
+            inputChildren.oninput = checkPax;
+
+            btnOpenCart.onclick = () => {
+                checkPax();
+                modalCart.classList.add('active');
+            };
+            btnCloseCart.onclick = () => modalCart.classList.remove('active');
+            window.addEventListener('cart-updated', updateCartUI);
+
+            btnConfirm.onclick = () => {
+                if (!checkPax()) return;
+                App.placeOrder(currentTableId, inputAdults.value, inputChildren.value);
+                modalCart.classList.remove('active');
+                updateCartUI();
+                renderMenu();
+                setTimeout(() => btnBack.click(), 500);
+            };
+
+            window.addEventListener('storage', () => {
+                App.loadState();
+                if (viewTables.style.display === 'block') refreshTables();
+                renderMenu();
+            });
+        });
+    </script>
+</body>
+
+</html>
